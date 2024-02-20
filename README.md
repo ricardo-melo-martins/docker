@@ -1,3 +1,3 @@
-# docker-ubuntu
+# docker
 
-docker ubuntu base 
+docker base 
