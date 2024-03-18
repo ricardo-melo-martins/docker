@@ -28,9 +28,11 @@ services:
       MYSQL_ROOT_HOST: "%"
       MYSQL_ROOT_PASSWORD: "${MYSQL_DB_ROOT_PASSWORD}"
       MYSQL_DATABASE: "${MYSQL_DB_DATABASE:-local}"
-      MYSQL_USER: "${MYSQL_DB_USERNAME}"
-      MYSQL_PASSWORD: "${MYSQL_DB_PASSWORD}"
-      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+      # Mysql > 8 
+      # https://dev.mysql.com/doc/refman/8.0/en/upgrading-from-previous-series.html#upgrade-caching-sha2-password
+      # MYSQL_USER: "${MYSQL_DB_USERNAME}"
+      # MYSQL_PASSWORD: "${MYSQL_DB_PASSWORD}"
+      # MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-p${MYSQL_DB_ROOT_PASSWORD}"]
       retries: 3
@@ -66,10 +68,23 @@ services:
       timeout: 5s
     networks:
       - local
-    
+
     ports:
      - ${PGSQL_DB_PORT:-5432}:5432
     volumes:
       - pgsql_db_data:/var/lib/postgresql/data
       - ./databases/postgres/scripts/sakila-schema.sql:/docker-entrypoint-initdb.d/01_sakila-schema.sql
       - ./databases/postgres/scripts/sakila-data.sql:/docker-entrypoint-initdb.d/02_sakila-data.sql
+  
+  # Redis
+  redis:
+    image: redis:latest
+    container_name: "${REDIS_DB_CONTAINER_NAME:-redis_db}"
+    env_file:
+      - ./.env
+    command: redis-server --save 20 1 --loglevel warning --requirepass "${REDIS_DB_PASSWORD}"
+    ports:
+      - ${REDIS_DB_PORT:-6379}:6379
+    networks:
+      - local
+      

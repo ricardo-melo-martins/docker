@@ -13,7 +13,9 @@ Docker with large database collection for fun development.
 - Mysql Database  
 - Postgres Database
 - Sqlite Database
+- Redis
 - Examples dump Sakila database
+- VSCode Extensions
 
 
 ## Requirements
@@ -22,10 +24,10 @@ Docker with large database collection for fun development.
 
 ## Install 
 
-Clooning...
+Cloooning...
 
 ```bash
-$ git clone git@github.com:ricardo-melo-martins/docker.git
+$ git clone https://github.com/ricardo-melo-martins/docker.git
 ```
 
 ... entering on `docker/` 
@@ -35,7 +37,7 @@ $ cd docker/
 ```
 
 
-## Configure
+### Configure
 
 copy example environment file 
 
@@ -47,7 +49,7 @@ $ cp ./config/.env.example .env
 and filling username, password ... your prefs
 
 
-Running
+### Running
 
 ```bash
 $ docker compose up -d
@@ -63,6 +65,35 @@ and Docker Desktop ...
 
 UOW!! now to have fun
 
+
+## Redis 
+
+Accessing Terminal 
+
+```bash
+$ docker exec -it rmm_redis_db bash
+
+# in root@<id> type
+$ redis-cli
+
+# result ...
+# 127.0.0.1:6379>
+```
+
+Testing
+
+```bash
+$ redis-cli -p 12000
+
+127.0.0.1:6379> auth YourP@ssw0rd! # if same of .env.example
+OK
+127.0.0.1:6379> set key-status closed
+OK
+127.0.0.1:6379> get key-status
+"closed"
+
+
+```
 
 ## License
 

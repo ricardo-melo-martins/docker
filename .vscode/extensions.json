@@ -1,0 +1,11 @@
+{
+	// See http://go.microsoft.com/fwlink/?LinkId=827846
+	// for the documentation about the extensions.json format
+	"recommendations": [
+        "ms-azuretools.vscode-docker",
+        "ms-vscode-remote.remote-containers",
+        "redhat.vscode-yaml",
+		"ms-ossdata.vscode-postgresql",
+		"ms-vscode-remote.remote-wsl"
+	]
+}
