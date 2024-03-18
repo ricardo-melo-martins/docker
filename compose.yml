@@ -89,7 +89,25 @@ services:
     networks:
       - local
 
+  # MSSQL
+  mssql:
+    build:
+      dockerfile: ./databases/mssql/dockerfile
+      context: .
+    container_name: "${MSSQL_DB_CONTAINER_NAME:-mssql_db}"
+    env_file:
+      - ./.env
+    environment:
+      SA_PASSWORD: "${MSSQL_DB_ROOT_PASSWORD}"
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: "Developer"
+      BAK_FILE: "${BAK_FILE}"
+    ports:
+      - ${MSSQL_DB_PORT:-1433}:1433
+    networks:
+      - local
 
+  # Adminer
   adminer:
     image: adminer
     container_name: UI-adminer
@@ -99,6 +117,7 @@ services:
     networks:
       - local
 
+  # PgAdmin
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: UI-pgadmin

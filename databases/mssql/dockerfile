@@ -1,0 +1,22 @@
+FROM mcr.microsoft.com/mssql/server:2022-latest
+
+ARG BAK_FILE
+ARG SA_PASSWORD
+
+ENV SA_PASSWORD=${SA_PASSWORD}
+ENV BAK_FILE=${BAK_FILE}
+
+EXPOSE 1433
+
+WORKDIR /
+
+# Auto Download
+# RUN ./databases/mssql/pre-install.sh
+
+COPY ./.tmp/${BAK_FILE}.bak ./adventureworks.bak
+
+COPY ./databases/mssql/install.sql .
+COPY ./databases/mssql/install.sh .
+COPY ./databases/mssql/startup.sh .
+
+CMD /bin/bash ./startup.sh
