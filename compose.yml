@@ -1,30 +1,34 @@
 version: "3.9"
-name: rmm-databases
+
+name: "project-local"
 
 networks:
   local:
     driver: "bridge"
-    name: ${MYSQL_NETWORK_NAME:-rmm_network}
+    name: ${NETWORK_NAME_LOCAL:-local_network}
 
 volumes:
-  mysql_db_data:
+  mysql_data:
     driver: "local"
-    name: "${MYSQL_DB_VOLUME_DATA_NAME:-rmm_mysql_db}"
+    name: "${MYSQL_DB_VOLUME_DATA_NAME:-mysql_data}"
     
-  pgsql_db_data:
+  pgsql_data:
     driver: "local"
-    name: "${PGSQL_DB_VOLUME_DATA_NAME:-rmm_pgsql_db}"
+    name: "${PGSQL_DB_VOLUME_DATA_NAME:-pgsql_data}"
 
-  mongodb_db_data:
+  mongo_data:
     driver: "local"
-    name: "${MONGO_DB_VOLUME_DATA_NAME:-rmm_mongodb_db}"
+    name: "${MONGO_DB_VOLUME_DATA_NAME:-mongo_data}"
 
+  redis_data:
+    driver: "local"
+    name: "${REDIS_DB_VOLUME_DATA_NAME:-redis_data}"
 
 services:
   
   # MySQL
   mysql:
-    image: mysql:latest
+    image: "${MYSQL_IMAGE_NAME}"
     container_name: "${MYSQL_DB_CONTAINER_NAME}"
     command: --default-authentication-plugin=caching_sha2_password
     env_file:
@@ -33,8 +37,6 @@ services:
       MYSQL_ROOT_HOST: "%"
       MYSQL_ROOT_PASSWORD: "${MYSQL_DB_ROOT_PASSWORD}"
       MYSQL_DATABASE: "${MYSQL_DB_DATABASE:-local}"
-      # Mysql > 8 
-      # https://dev.mysql.com/doc/refman/8.0/en/upgrading-from-previous-series.html#upgrade-caching-sha2-password
       MYSQL_USER: "${MYSQL_DB_USERNAME}"
       MYSQL_PASSWORD: "${MYSQL_DB_PASSWORD}"
       # MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
@@ -43,20 +45,19 @@ services:
       retries: 3
       timeout: 5s
     networks:
-      - local
+      - ${MYSQL_NETWORK_NAME}
     platform: linux/x86_64
     ports:
      - ${MYSQL_DB_PORT:-3306}:3306
     volumes:
-      - mysql_db_data:/var/lib/mysql
+      - mysql_data:/var/lib/mysql
       - ./databases/mysql/scripts/sakila-schema.sql:/docker-entrypoint-initdb.d/01_sakila-schema.sql
       - ./databases/mysql/scripts/sakila-data.sql:/docker-entrypoint-initdb.d/02_sakila-data.sql
   
   # Postgres
   pgsql:
-
-    image: postgres:latest
-    container_name: "${PGSQL_DB_CONTAINER_NAME:-pgsql_db}"
+    image: "${PGSQL_IMAGE_NAME}"
+    container_name: "${PGSQL_DB_CONTAINER_NAME}"
     env_file:
       - ./.env
     environment:
@@ -72,104 +73,106 @@ services:
       retries: 3
       timeout: 5s
     networks:
-      - local
-
+      - ${PGSQL_NETWORK_NAME}
     ports:
      - ${PGSQL_DB_PORT:-5432}:5432
     volumes:
-      - pgsql_db_data:/var/lib/postgresql/data
+      - pgsql_data:/var/lib/postgresql/data
       - ./databases/postgres/scripts/sakila-schema.sql:/docker-entrypoint-initdb.d/01_sakila-schema.sql
       - ./databases/postgres/scripts/sakila-data.sql:/docker-entrypoint-initdb.d/02_sakila-data.sql
   
   # Redis
   redis:
-    image: redis:latest
-    container_name: "${REDIS_DB_CONTAINER_NAME:-redis_db}"
+    image: "${REDIS_IMAGE_NAME}"
+    container_name: "${REDIS_DB_CONTAINER_NAME}"
     env_file:
       - ./.env
     command: redis-server --save 20 1 --loglevel warning --requirepass "${REDIS_DB_PASSWORD}"
     ports:
       - ${REDIS_DB_PORT:-6379}:6379
+    volumes:
+      - redis_data:/data      
     networks:
-      - local
+      - ${REDIS_NETWORK_NAME}
 
   # MSSQL
   mssql:
     build:
       dockerfile: ./databases/mssql/dockerfile
       context: .
-    container_name: "${MSSQL_DB_CONTAINER_NAME:-mssql_db}"
+    container_name: "${MSSQL_DB_CONTAINER_NAME}"
     env_file:
       - ./.env
     environment:
       SA_PASSWORD: "${MSSQL_DB_ROOT_PASSWORD}"
       ACCEPT_EULA: "Y"
-      MSSQL_PID: "Developer"
-      BAK_FILE: "${BAK_FILE}"
+      MSSQL_PID: "${MSSQL_DB_PID}"
+      BAK_FILE: "${MSSQL_DB_BAK_FILE}"
     ports:
       - ${MSSQL_DB_PORT:-1433}:1433
     networks:
-      - local
+      - ${MSSQL_NETWORK_NAME}
   
   # MongoDB
   mongo:
-    image: mongo:latest
+    image: "${MONGO_IMAGE_NAME}"
     container_name: "${MONGO_DB_CONTAINER_NAME:-mongo_db}"
     # command: "mongo -u ${MONGO_DB_USERNAME:-root} -p ${MONGO_DB_PASSWORD} --authenticationDatabase admin"
     env_file:
       - ./.env
     volumes:
-      - mongodb_db_data:/data/db
+      - mongo_data:/data/db
     ports:
       - ${MONGO_DB_PORT:-27017}:27017
     environment:
       MONGO_INITDB_ROOT_USERNAME: "${MONGO_DB_USERNAME:-root}"
       MONGO_INITDB_ROOT_PASSWORD: "${MONGO_DB_PASSWORD}"
     networks:
-      - local
+      - ${MONGO_NETWORK_NAME}
 
   mongo-express:
-    image: mongo-express
+    image: ${MONGO_EXPRESS_IMAGE_NAME}
+    container_name: "${MONGO_EXPRESS_CONTAINER_NAME:-mongo_ui}"
     env_file:
       - ./.env
     ports:
-      - 9002:8081
+      - ${MONGO_EXPRESS_UI_PORT:-9002}:8081
     environment:
-      ME_CONFIG_MONGODB_URL: "mongodb://${MONGO_DB_USERNAME:-root}:${MONGO_DB_PASSWORD}@mongo:27017/?authSource=admin"
+      ME_CONFIG_MONGODB_URL: "${MONGO_EXPRESS_URL:-mongodb://${MONGO_DB_USERNAME:-root}:${MONGO_DB_PASSWORD}@mongo:${MONGO_DB_PORT}/?authSource=admin}"
       ME_CONFIG_BASICAUTH_USERNAME: "${MONGO_EXPRESS_USERNAME}"
       ME_CONFIG_BASICAUTH_PASSWORD: "${MONGO_EXPRESS_PASSWORD}"
       ME_CONFIG_MONGODB_PORT: ${MONGO_DB_PORT:-27017}
       ME_CONFIG_MONGODB_ADMINUSERNAME: "${MONGO_DB_USERNAME:-root}"
       ME_CONFIG_MONGODB_ADMINPASSWORD: "${MONGO_DB_PASSWORD}"
-      ME_CONFIG_MONGODB_ENABLE_ADMIN: "true"
+      ME_CONFIG_MONGODB_ENABLE_ADMIN: "${MONGO_EXPRESS_ENABLE_ADMIN}"
     links:
       - mongo
     networks:
-      - local
+      - ${MONGO_EXPRESS_NETWORK_NAME}
 
   # Adminer
   adminer:
-    image: adminer
-    container_name: UI-adminer
+    image: ${ADMINER_IMAGE_NAME:-adminer}
+    container_name: "${ADMINER_CONTAINER_NAME:-adminer_ui}"
     restart: always
     ports:
-      - 9000:8080
+      - ${ADMINER_UI_PORT:-9000}:8080
     networks:
-      - local
+      - ${ADMINER_NETWORK_NAME}
 
   # PgAdmin
   pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: UI-pgadmin
+    image: ${PGADMIN_IMAGE_NAME:-dpage/pgadmin4:latest}
+    container_name: "${PGADMIN_CONTAINER_NAME:-pgadmin_ui}"
     restart: always
     depends_on:
       - pgsql
     environment:
-      PGADMIN_DEFAULT_EMAIL: user@localhost.com
-      PGADMIN_DEFAULT_PASSWORD: password
+      PGADMIN_DEFAULT_EMAIL: "${PGADMIN_DEFAULT_EMAIL}"
+      PGADMIN_DEFAULT_PASSWORD: "${PGADMIN_DEFAULT_PASSWORD}"
     ports:
-      - 9001:80
+      - ${PGADMIN_UI_PORT:-9001}:80
     networks:
-      - local
+      - ${PGADMIN_NETWORK_NAME}
     # volumes:
     #   - ./data/pgadmin:/var/lib/pgadmin      
