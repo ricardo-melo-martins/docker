@@ -15,6 +15,10 @@ volumes:
     driver: "local"
     name: "${PGSQL_DB_VOLUME_DATA_NAME:-rmm_pgsql_db}"
 
+  mongodb_db_data:
+    driver: "local"
+    name: "${MONGO_DB_VOLUME_DATA_NAME:-rmm_mongodb_db}"
+
 
 services:
   
@@ -104,6 +108,42 @@ services:
       BAK_FILE: "${BAK_FILE}"
     ports:
       - ${MSSQL_DB_PORT:-1433}:1433
+    networks:
+      - local
+  
+  # MongoDB
+  mongo:
+    image: mongo:latest
+    container_name: "${MONGO_DB_CONTAINER_NAME:-mongo_db}"
+    # command: "mongo -u ${MONGO_DB_USERNAME:-root} -p ${MONGO_DB_PASSWORD} --authenticationDatabase admin"
+    env_file:
+      - ./.env
+    volumes:
+      - mongodb_db_data:/data/db
+    ports:
+      - ${MONGO_DB_PORT:-27017}:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "${MONGO_DB_USERNAME:-root}"
+      MONGO_INITDB_ROOT_PASSWORD: "${MONGO_DB_PASSWORD}"
+    networks:
+      - local
+
+  mongo-express:
+    image: mongo-express
+    env_file:
+      - ./.env
+    ports:
+      - 9002:8081
+    environment:
+      ME_CONFIG_MONGODB_URL: "mongodb://${MONGO_DB_USERNAME:-root}:${MONGO_DB_PASSWORD}@mongo:27017/?authSource=admin"
+      ME_CONFIG_BASICAUTH_USERNAME: "${MONGO_EXPRESS_USERNAME}"
+      ME_CONFIG_BASICAUTH_PASSWORD: "${MONGO_EXPRESS_PASSWORD}"
+      ME_CONFIG_MONGODB_PORT: ${MONGO_DB_PORT:-27017}
+      ME_CONFIG_MONGODB_ADMINUSERNAME: "${MONGO_DB_USERNAME:-root}"
+      ME_CONFIG_MONGODB_ADMINPASSWORD: "${MONGO_DB_PASSWORD}"
+      ME_CONFIG_MONGODB_ENABLE_ADMIN: "true"
+    links:
+      - mongo
     networks:
       - local
 
