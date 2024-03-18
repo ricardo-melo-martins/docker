@@ -10,6 +10,7 @@ volumes:
   mysql_db_data:
     driver: "local"
     name: "${MYSQL_DB_VOLUME_DATA_NAME:-rmm_mysql_db}"
+    
   pgsql_db_data:
     driver: "local"
     name: "${PGSQL_DB_VOLUME_DATA_NAME:-rmm_pgsql_db}"
@@ -21,7 +22,7 @@ services:
   mysql:
     image: mysql:latest
     container_name: "${MYSQL_DB_CONTAINER_NAME}"
-    command: --default-authentication-plugin=mysql_native_password
+    command: --default-authentication-plugin=caching_sha2_password
     env_file:
       - ./.env
     environment:
@@ -30,8 +31,8 @@ services:
       MYSQL_DATABASE: "${MYSQL_DB_DATABASE:-local}"
       # Mysql > 8 
       # https://dev.mysql.com/doc/refman/8.0/en/upgrading-from-previous-series.html#upgrade-caching-sha2-password
-      # MYSQL_USER: "${MYSQL_DB_USERNAME}"
-      # MYSQL_PASSWORD: "${MYSQL_DB_PASSWORD}"
+      MYSQL_USER: "${MYSQL_DB_USERNAME}"
+      MYSQL_PASSWORD: "${MYSQL_DB_PASSWORD}"
       # MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-p${MYSQL_DB_ROOT_PASSWORD}"]
@@ -87,4 +88,29 @@ services:
       - ${REDIS_DB_PORT:-6379}:6379
     networks:
       - local
-      
+
+
+  adminer:
+    image: adminer
+    container_name: UI-adminer
+    restart: always
+    ports:
+      - 9000:8080
+    networks:
+      - local
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: UI-pgadmin
+    restart: always
+    depends_on:
+      - pgsql
+    environment:
+      PGADMIN_DEFAULT_EMAIL: user@localhost.com
+      PGADMIN_DEFAULT_PASSWORD: password
+    ports:
+      - 9001:80
+    networks:
+      - local
+    # volumes:
+    #   - ./data/pgadmin:/var/lib/pgadmin      
