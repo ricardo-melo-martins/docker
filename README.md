@@ -10,11 +10,24 @@ Docker with large database collection for fun development.
 
 ## Features
 
-- Mysql Database  
-- Postgres Database
-- Sqlite Database
+- Mysql
+    - From Latest version
+    - Sakila database example 1.4
+    - UI Adminer
+- Postgres
+    - From Latest version
+    - Sakila database example
+    - UI PGAdmin and Adminer
+- Sqlite
+    - Chinook database example
+    - UI Adminer
 - Redis
-- Examples dump Sakila database
+- Sql Server
+    - From 2022-latest version
+    - AdventureWorks 2022 database example
+- Mongo 
+    - From latest version
+    - UI Mongo Express
 - VSCode Extensions
 
 
