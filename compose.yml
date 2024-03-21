@@ -196,3 +196,26 @@ services:
       - redis_insight_data:/db
     networks:
       - ${REDIS_NETWORK_NAME}
+
+  # Prometheus
+  prometheus:
+    image: ${PROMETHEUS_IMAGE_NAME:-prom/prometheus:latest}
+    ports:
+      - ${PROMETHEUS_UI_PORT:-9090}:9090
+    networks:
+      - ${PROMETHEUS_NETWORK_NAME}
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    extra_hosts: 
+      host.docker.internal: ${DOCKER_INTERNAL_IP_LOCAL}
+
+  # Grafana
+  grafana: 
+    image: ${GRAFANA_IMAGE_NAME:-grafana/grafana:latest}
+    ports: 
+      - ${GRAFANA_UI_PORT:-3000}:3000
+    networks:
+      - ${GRAFANA_NETWORK_NAME}
+    depends_on:
+      - prometheus
+	  
