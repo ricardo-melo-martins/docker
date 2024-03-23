@@ -11,7 +11,7 @@ volumes:
   mysql_data:
     driver: "local"
     name: "${MYSQL_DB_VOLUME_DATA_NAME:-mysql_data}"
-    
+
   pgsql_data:
     driver: "local"
     name: "${PGSQL_DB_VOLUME_DATA_NAME:-pgsql_data}"
@@ -28,9 +28,7 @@ volumes:
     driver: "local"
     name: "${REDIS_INSIGHT_VOLUME_DATA_NAME:-redis_insight_data}"
 
-
 services:
-  
   # MySQL
   mysql:
     image: "${MYSQL_IMAGE_NAME}"
@@ -53,12 +51,12 @@ services:
       - ${MYSQL_NETWORK_NAME}
     platform: linux/x86_64
     ports:
-     - ${MYSQL_DB_PORT:-3306}:3306
+      - ${MYSQL_DB_PORT:-3306}:3306
     volumes:
       - mysql_data:/var/lib/mysql
       - ./databases/mysql/scripts/sakila-schema.sql:/docker-entrypoint-initdb.d/01_sakila-schema.sql
       - ./databases/mysql/scripts/sakila-data.sql:/docker-entrypoint-initdb.d/02_sakila-data.sql
-  
+
   # Postgres
   pgsql:
     image: "${PGSQL_IMAGE_NAME}"
@@ -70,22 +68,27 @@ services:
       POSTGRES_USER: "${PGSQL_DB_USERNAME}"
       POSTGRES_PASSWORD: "${PGSQL_DB_PASSWORD}"
     healthcheck:
-      test: [
-        "CMD", "pg_isready", "-q",
-        "-d", "${PGSQL_DB_DATABASE:-local}",
-        "-U", "${PGSQL_DB_USERNAME}"
-      ]
+      test:
+        [
+          "CMD",
+          "pg_isready",
+          "-q",
+          "-d",
+          "${PGSQL_DB_DATABASE:-local}",
+          "-U",
+          "${PGSQL_DB_USERNAME}",
+        ]
       retries: 3
       timeout: 5s
     networks:
       - ${PGSQL_NETWORK_NAME}
     ports:
-     - ${PGSQL_DB_PORT:-5432}:5432
+      - ${PGSQL_DB_PORT:-5432}:5432
     volumes:
       - pgsql_data:/var/lib/postgresql/data
       - ./databases/postgres/scripts/sakila-schema.sql:/docker-entrypoint-initdb.d/01_sakila-schema.sql
       - ./databases/postgres/scripts/sakila-data.sql:/docker-entrypoint-initdb.d/02_sakila-data.sql
-  
+
   # Redis
   redis:
     image: "${REDIS_IMAGE_NAME}"
@@ -96,7 +99,7 @@ services:
     ports:
       - ${REDIS_DB_PORT:-6379}:6379
     volumes:
-      - redis_data:/data      
+      - redis_data:/data
     networks:
       - ${REDIS_NETWORK_NAME}
 
@@ -117,7 +120,7 @@ services:
       - ${MSSQL_DB_PORT:-1433}:1433
     networks:
       - ${MSSQL_NETWORK_NAME}
-  
+
   # MongoDB
   mongo:
     image: "${MONGO_IMAGE_NAME}"
@@ -180,8 +183,7 @@ services:
     networks:
       - ${PGADMIN_NETWORK_NAME}
     # volumes:
-    #   - ./data/pgadmin:/var/lib/pgadmin      
-
+    #   - ./data/pgadmin:/var/lib/pgadmin
 
   # RedisInsight
   redisinsight:
@@ -206,16 +208,15 @@ services:
       - ${PROMETHEUS_NETWORK_NAME}
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
-    extra_hosts: 
+    extra_hosts:
       host.docker.internal: ${DOCKER_INTERNAL_IP_LOCAL}
 
   # Grafana
-  grafana: 
+  grafana:
     image: ${GRAFANA_IMAGE_NAME:-grafana/grafana:latest}
-    ports: 
+    ports:
       - ${GRAFANA_UI_PORT:-3000}:3000
     networks:
       - ${GRAFANA_NETWORK_NAME}
     depends_on:
       - prometheus
-	  
