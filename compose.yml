@@ -28,6 +28,10 @@ volumes:
     driver: "local"
     name: "${REDIS_INSIGHT_VOLUME_DATA_NAME:-redis_insight_data}"
 
+  mariadb_data:
+    driver: "local"
+    name: "${MARIADB_VOLUME_DATA_NAME:-mariadb_data}"
+
 
 services:
   
@@ -118,6 +122,21 @@ services:
     networks:
       - ${MSSQL_NETWORK_NAME}
   
+  # MARIADB
+  mariadb:
+    image: ${MARIA_DB_IMAGE_NAME:-mariadb:latest}
+    container_name: ${MARIA_DB_CONTAINER_NAME}
+    env_file:
+      - ./.env
+    volumes:
+      - ${MARIA_DB_VOLUME_NAME:-mariadb_data}:/var/lib/mysql
+    restart: always
+    ports:
+      - ${MARIA_DB_PORT:-3306}:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MARIA_DB_PASSWORD}
+
+
   # MongoDB
   mongo:
     image: "${MONGO_IMAGE_NAME}"
