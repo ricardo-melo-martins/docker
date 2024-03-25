@@ -10,62 +10,67 @@ Docker with large database collection for fun development.
 
 ## Features
 
+- Focus on quick start
+- Configurable File
+- MariaDB
+  - From latest version
+  - UI Adminer
 - Mysql
-    - From Latest version
-    - Sakila database example 1.4
-    - UI Adminer
+  - From latest version
+  - Sakila database example 1.4
+  - UI Adminer
 - Postgres
-    - From Latest version
-    - Sakila database example
-    - UI PGAdmin and Adminer
+  - From latest version
+  - Sakila database example
+  - UI PGAdmin and Adminer
 - Sqlite
-    - Chinook database example
-    - UI Adminer
+  - Chinook database example
+  - UI Adminer
 - Redis
 - Sql Server
-    - From 2022-latest version
-    - AdventureWorks 2022 database example
-- Mongo 
-    - From latest version
-    - UI Mongo Express
+  - From 2022-latest version
+  - AdventureWorks 2022 database example
+- DB2
+  - From latest version
+- Mongo
+  - From latest version
+  - UI Mongo Express
 - VSCode Extensions
-
 
 ## Requirements
 
 - Docker > 18.06
+- Node (Optional for seed data)
 
-## Install 
+## Install
 
 Cloooning...
 
 ```bash
-$ git clone https://github.com/ricardo-melo-martins/docker.git
+git clone https://github.com/ricardo-melo-martins/docker.git
 ```
 
-... entering on `docker/` 
+... entering on `docker/`
 
 ```bash
-$ cd docker/
+cd docker/
 ```
-
 
 ### Configure
 
-copy example environment file 
+copy example environment file
 
 ```bash
-$ cp ./config/.env.example .env
+cp ./config/.env.example .env
 
 ```
 
-and filling username, password ... your prefs
-
+then change the configuration according to the database you want to use.
 
 ### Running
 
 ```bash
-$ docker compose up -d
+docker compose up -d
 ```
 
 ...results
@@ -78,10 +83,9 @@ and Docker Desktop ...
 
 UOW!! now to have fun
 
+## Redis
 
-## Redis 
-
-Accessing Terminal 
+Accessing Terminal
 
 ```bash
 $ docker exec -it rmm_redis_db bash
